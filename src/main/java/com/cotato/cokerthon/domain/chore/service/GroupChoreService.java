@@ -4,6 +4,8 @@ import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreCreateRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreFromCatalogRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreStatusUpdateRequest;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreBoardResponse;
+import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreCalendarResponse;
+import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreDailyResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreResponse;
 import com.cotato.cokerthon.domain.chore.entity.*;
 import com.cotato.cokerthon.domain.chore.exception.ChoreErrorCode;
@@ -22,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -144,6 +148,44 @@ public class GroupChoreService {
     }
 
     /**
+     * 특정 날짜의 집안일 조회 (오늘의 과업)
+     */
+    public GroupChoreDailyResponse getChoresByDate(Long groupId, LocalDate date) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new CustomException(ChoreErrorCode.GROUP_NOT_FOUND);
+        }
+
+        List<GroupChore> chores = groupChoreRepository.findByGroup_IdAndDate(groupId, date);
+        int completedCount = (int) chores.stream().filter(chore -> chore.getStatus() == ChoreStatus.DONE).count();
+
+        List<GroupChoreResponse> responses = chores.stream()
+                .map(GroupChoreResponse::from)
+                .collect(Collectors.toList());
+
+        return new GroupChoreDailyResponse(date, chores.size(), completedCount, responses);
+    }
+
+    /**
+     * 날짜 범위별 집안일 조회 (캘린더 표시용)
+     */
+    public List<GroupChoreCalendarResponse> getChoresByDateRange(Long groupId, LocalDate startDate, LocalDate endDate) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new CustomException(ChoreErrorCode.GROUP_NOT_FOUND);
+        }
+
+        List<GroupChore> chores = groupChoreRepository.findByGroup_IdAndDateBetween(groupId, startDate, endDate);
+        Map<LocalDate, List<GroupChoreResponse>> choresByDate = chores.stream()
+                .collect(Collectors.groupingBy(GroupChore::getDate,
+                        Collectors.mapping(GroupChoreResponse::from, Collectors.toList())));
+
+        List<GroupChoreCalendarResponse> result = new ArrayList<>();
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            result.add(new GroupChoreCalendarResponse(date, choresByDate.getOrDefault(date, List.of())));
+        }
+        return result;
+    }
+
+    /**
      * 집안일 진행 단계 변경 (예정 -> 진행중 -> 완료)
      */
     @Transactional
@@ -155,8 +197,62 @@ public class GroupChoreService {
             throw new CustomException(ChoreErrorCode.CHORE_NOT_IN_GROUP);
         }
 
-        chore.updateStatus(request.status());
+        ChoreStatus previousStatus = chore.getStatus();
+        ChoreStatus newStatus = request.status();
+
+        // 기존에 완료 상태였다면, 그때 반영했던 점수를 먼저 되돌린다
+        // (완료 -> 완료 취소는 물론, 완료 -> 완료(수행자 재지정)인 경우에도 재계산을 위해 반드시 필요)
+        if (previousStatus == ChoreStatus.DONE) {
+            revertContributionOnCancel(chore);
+            chore.markPerformedBy(null);
+        }
+
+        // 새로 완료 상태가 된다면, 수행자를 지정해 점수를 다시 반영한다
+        if (newStatus == ChoreStatus.DONE) {
+            // 수행자를 지정하지 않으면 담당자가 직접 수행한 것으로 처리
+            Member performer = request.performerId() != null
+                    ? resolvePerformer(chore.getGroup(), request.performerId())
+                    : chore.getAssignee();
+            chore.markPerformedBy(performer);
+            applyContributionOnComplete(chore, performer);
+        }
+
+        chore.updateStatus(newStatus);
         return GroupChoreResponse.from(chore);
+    }
+
+    // 실제로 집안일을 수행한 사람이 그룹에 속해있는지 확인
+    private Member resolvePerformer(Group group, Long performerId) {
+        Member performer = memberRepository.findById(performerId)
+                .orElseThrow(() -> new CustomException(ChoreErrorCode.ASSIGNEE_NOT_FOUND));
+
+        if (!groupMemberRepository.existsByGroupAndMember(group, performer)) {
+            throw new CustomException(ChoreErrorCode.ASSIGNEE_NOT_IN_GROUP);
+        }
+
+        return performer;
+    }
+
+    // 완료 처리: 수행자에게 집안일 점수를 더하고, 담당자와 수행자가 다르면 담당자에게 감점을 적용
+    private void applyContributionOnComplete(GroupChore chore, Member performer) {
+        if (chore.isDelegated()) {
+            chore.getAssignee().addPoint(-GroupChore.DELEGATE_PENALTY);
+        }
+        if (performer != null) {
+            performer.addPoint(chore.getEffectiveScore());
+        }
+    }
+
+    // 완료 취소: 완료 처리 때 반영했던 점수를 반대로 되돌림
+    private void revertContributionOnCancel(GroupChore chore) {
+        Member performer = chore.getPerformedBy();
+
+        if (chore.isDelegated()) {
+            chore.getAssignee().addPoint(GroupChore.DELEGATE_PENALTY);
+        }
+        if (performer != null) {
+            performer.addPoint(-chore.getEffectiveScore());
+        }
     }
 
     // 담당자 지정 방식(선택안함/직접선택/룰렛)에 따라 담당자를 결정

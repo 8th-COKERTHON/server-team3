@@ -16,6 +16,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class GroupChore extends BaseTimeEntity {
 
+    // 완료 처리 시 실제 수행자가 담당자와 다를 때 담당자에게 적용하는 감점
+    public static final int DELEGATE_PENALTY = 5;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
     private Group group;
@@ -23,6 +26,11 @@ public class GroupChore extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
     private Member assignee;
+
+    // 완료 처리 시 실제로 수행한 사람 (담당자와 다를 수 있음)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "performed_by_id")
+    private Member performedBy;
 
     // 미리 정의된 집안일 목록(카탈로그)에서 선택한 항목 (있으면 난이도/점수의 출처, 없으면 자체 필드 사용)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -85,6 +93,11 @@ public class GroupChore extends BaseTimeEntity {
         this.assignee = assignee;
     }
 
+    // 완료 처리 시 실제 수행자 기록 (완료 취소 시 null로 초기화)
+    public void markPerformedBy(Member performer) {
+        this.performedBy = performer;
+    }
+
     // 진행 단계 변경 메서드 (예정 -> 진행중 -> 완료)
     public void updateStatus(ChoreStatus status) {
         this.status = status;
@@ -101,5 +114,10 @@ public class GroupChore extends BaseTimeEntity {
             return chore.getScore();
         }
         return score != null ? score : 0;
+    }
+
+    // 완료 처리 시 실제 수행자가 담당자와 다른지 여부 (담당자에게 감점이 적용되는 경우)
+    public boolean isDelegated() {
+        return assignee != null && performedBy != null && !assignee.getId().equals(performedBy.getId());
     }
 }
