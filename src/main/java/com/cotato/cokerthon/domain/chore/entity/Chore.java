@@ -17,7 +17,6 @@ public class Chore extends BaseTimeEntity {
     @JoinColumn(name = "group_id")
     private Group group;
 
-    @Column(nullable = false)
     private String category;
 
     @Column(nullable = false)
@@ -33,7 +32,7 @@ public class Chore extends BaseTimeEntity {
     private String memo;
 
     @Builder
-    public Chore(Group group, String category, String name, Difficulty difficulty, String memo, String repetition) {
+    public Chore(Group group, String category, String name, Difficulty difficulty, String memo) {
         this.group = group;
         this.category = category;
         this.name = name;
