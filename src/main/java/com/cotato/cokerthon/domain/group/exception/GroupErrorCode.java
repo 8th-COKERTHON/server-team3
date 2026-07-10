@@ -13,6 +13,9 @@ public enum GroupErrorCode implements ErrorCode {
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP_ERROR_404_MEMBER_NOT_FOUND", "존재하지 않는 회원입니다."),
     INVALID_INVITE_CODE(HttpStatus.NOT_FOUND, "GROUP_ERROR_404_INVALID_INVITE_CODE", "올바르지 않은 초대 코드입니다."),
 
+    // 400 Bad Request
+    NO_GROUP_MEMBERS(HttpStatus.BAD_REQUEST, "GROUP_ERROR_400_NO_GROUP_MEMBERS", "그룹에 소속된 멤버가 없습니다."),
+
     // 409 Conflict
     ALREADY_JOINED_GROUP(HttpStatus.CONFLICT, "GROUP_ERROR_409_ALREADY_JOINED", "이미 가입된 그룹입니다.");
 

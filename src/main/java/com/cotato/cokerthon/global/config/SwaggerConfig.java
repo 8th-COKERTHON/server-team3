@@ -63,5 +63,18 @@ public class SwaggerConfig {
                 .build();
     }
 
+    /**
+     * 그룹별 Chore 관련 API
+     */
+    @Bean
+    public GroupedOpenApi choreApi() {
+        return GroupedOpenApi.builder()
+                .group("Chore")
+                .displayName("Chore API")
+                .packagesToScan("com.cotato.cokerthon.domain.chore.controller")
+                .pathsToMatch("/api/groups/{groupId}/chores/**")
+                .build();
+    }
+
 
 }
