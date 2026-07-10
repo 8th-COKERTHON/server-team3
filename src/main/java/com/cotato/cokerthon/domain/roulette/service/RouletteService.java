@@ -65,7 +65,7 @@ public class RouletteService {
     // 1/(totalPoints+1) 사용 → 0점도 자연스럽게 처리, 많이 할수록 확률 감소
     private List<RouletteSliceResponse> computeSlices(List<Member> members) {
         double[] inverses = members.stream()
-                .mapToDouble(m -> 1.0 / (m.getTotalPoints() + 1))
+                .mapToDouble(m -> 1.0 / (m.getTotal_point() + 1))
                 .toArray();
 
         double totalInverse = 0;

@@ -33,11 +33,7 @@ public class SwaggerConfig {
                 .group("Roulette")
                 .displayName("roulette API")
                 .packagesToScan("com.cotato.cokerthon.domain.roulette.controller")
-                .pathsToMatch("/api/roulette/**")
-                .group("Member")
-                .displayName("Member API")
-                .packagesToScan("com.cotato.cokerthon.domain.member.controller")
-                .pathsToMatch("/api/members/**")
+                .pathsToMatch("/api/roulette/**", "/api/roulette")
                 .build();
     }
 
@@ -68,4 +64,16 @@ public class SwaggerConfig {
     }
 
 
+    /**
+     * Member 관련 API
+     */
+    @Bean
+    public GroupedOpenApi memberApi() {
+        return GroupedOpenApi.builder()
+                .group("Member")
+                .displayName("Member API")
+                .packagesToScan("com.cotato.cokerthon.domain.member.controller")
+                .pathsToMatch("/api/members/**")
+                .build();
+    }
 }
