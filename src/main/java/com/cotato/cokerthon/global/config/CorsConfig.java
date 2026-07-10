@@ -15,7 +15,8 @@ public class CorsConfig implements WebMvcConfigurer {
 
     private static final List<String> ALLOWED_ORIGINS = List.of(
             "https://43.202.209.89.nip.io",
-            "http://localhost:3000"
+            "http://localhost:3000",
+            "https://cokerthon-team3.vercel.app"
     );
 
     @Override
