@@ -46,30 +46,25 @@ public class ChoreRequestService {
     }
 
     @Transactional
-    public List<ChoreRequestResponse> getReceivedRequests(Member receiver) {
-        List<ChoreRequest> requests = choreRequestRepository.findByReceiverOrderByCreatedAtDesc(receiver);
+    public List<ChoreRequestResponse> getNotifications(Member member) {
+        List<ChoreRequest> received = choreRequestRepository.findByReceiverOrderByCreatedAtDesc(member);
+        List<ChoreRequest> sent = choreRequestRepository.findBySenderOrderByCreatedAtDesc(member);
 
-        requests.stream()
+        received.stream()
                 .filter(r -> !r.isRead())
                 .forEach(ChoreRequest::markAsRead);
 
-        return requests.stream()
-                .map(ChoreRequestResponse::fromReceiverView)
-                .toList();
-    }
-
-    @Transactional
-    public List<ChoreRequestResponse> getSentRequests(Member sender) {
-        List<ChoreRequest> requests = choreRequestRepository.findBySenderOrderByCreatedAtDesc(sender);
-
-        requests.stream()
+        sent.stream()
                 .filter(r -> r.getStatus() == ChoreStatus.DONE && !r.isCompletionRead())
                 .forEach(ChoreRequest::markCompletionRead);
 
-        return requests.stream()
-                .filter(r -> r.getStatus() == ChoreStatus.DONE)
-                .map(ChoreRequestResponse::fromSenderView)
-                .toList();
+        List<ChoreRequestResponse> result = new java.util.ArrayList<>();
+        received.stream().map(ChoreRequestResponse::fromReceiverView).forEach(result::add);
+        sent.stream().filter(r -> r.getStatus() == ChoreStatus.DONE)
+                .map(ChoreRequestResponse::fromSenderView).forEach(result::add);
+
+        result.sort((a, b) -> b.createdAt().compareTo(a.createdAt()));
+        return result;
     }
 
     @Transactional

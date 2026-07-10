@@ -18,7 +18,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/chore-requests")
+@RequestMapping("/api/chore-requests")
 @Tag(name = "Chore Request API")
 public class ChoreRequestController {
 
@@ -44,16 +44,10 @@ public class ChoreRequestController {
         return CommonResponse.success(choreRequestService.getUnreadCount(member));
     }
 
-    @Operation(summary = "받은 요청 목록 조회", description = "벨 클릭 시 호출. 조회와 동시에 읽음 처리됩니다.")
-    @GetMapping("/received")
-    public CommonResponse<List<ChoreRequestResponse>> getReceivedRequests(@CurrentUser Member receiver) {
-        return CommonResponse.success(choreRequestService.getReceivedRequests(receiver));
-    }
-
-    @Operation(summary = "보낸 요청 완료 목록 조회", description = "벨 클릭 시 호출. 완료된 요청만 반환하며 읽음 처리됩니다.")
-    @GetMapping("/sent")
-    public CommonResponse<List<ChoreRequestResponse>> getSentRequests(@CurrentUser Member sender) {
-        return CommonResponse.success(choreRequestService.getSentRequests(sender));
+    @Operation(summary = "알림 목록 조회", description = "벨 클릭 시 호출. 받은 요청 + 완료 알림을 최신순으로 반환하며 읽음 처리됩니다.")
+    @GetMapping("/notifications")
+    public CommonResponse<List<ChoreRequestResponse>> getNotifications(@CurrentUser Member member) {
+        return CommonResponse.success(choreRequestService.getNotifications(member));
     }
 
     @Operation(summary = "요청 완료 처리", description = "받은 요청을 완료 처리합니다.")
