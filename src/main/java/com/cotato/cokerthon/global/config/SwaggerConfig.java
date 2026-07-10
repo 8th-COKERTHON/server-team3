@@ -25,15 +25,28 @@ import io.swagger.v3.oas.annotations.servers.Server;
 public class SwaggerConfig {
 
     /**
-     * User 관련 API
+     * Member 관련 API
      */
     @Bean
     public GroupedOpenApi userApi() {
         return GroupedOpenApi.builder()
-                .group("User")
-                .displayName("User API")
-                .packagesToScan("com.cotato.cokerthon.domain.user.controller")
-                .pathsToMatch("/api/users/**")
+                .group("Member")
+                .displayName("Member API")
+                .packagesToScan("com.cotato.cokerthon.domain.member.controller")
+                .pathsToMatch("/api/members/**")
+                .build();
+    }
+
+    /**
+     * Auth 관련 API
+     */
+    @Bean
+    public GroupedOpenApi authApi() {
+        return GroupedOpenApi.builder()
+                .group("Auth")
+                .displayName("Auth API")
+                .packagesToScan("com.cotato.cokerthon.domain.auth.controller")
+                .pathsToMatch("/api/auth/**")
                 .build();
     }
 

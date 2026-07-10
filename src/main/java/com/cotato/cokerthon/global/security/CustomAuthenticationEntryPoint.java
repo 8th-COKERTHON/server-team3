@@ -1,10 +1,12 @@
 package com.cotato.cokerthon.global.security;
 
+
 import com.cotato.cokerthon.global.common.response.CommonResponse;
 import com.cotato.cokerthon.global.exception.error.GlobalErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -12,19 +14,26 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+@Slf4j
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response,
-                          AuthenticationException authException) throws IOException {
-        response.setStatus(GlobalErrorCode.UNAUTHORIZED.getHttpStatus().value());
+    public void commence(HttpServletRequest request,
+                         HttpServletResponse response,
+                         AuthenticationException authException)
+            throws IOException {
+        log.error("Unauthorized error: {}", authException.getMessage());
+
+        CommonResponse<Void> errorResponse = CommonResponse.error(GlobalErrorCode.UNAUTHORIZED);
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write(
-                objectMapper.writeValueAsString(CommonResponse.error(GlobalErrorCode.UNAUTHORIZED))
-        );
+
+        // JSON으로 변환, 전송
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }
