@@ -12,4 +12,8 @@ public interface GroupChoreRepository extends JpaRepository<GroupChore, Long> {
     List<GroupChore> findByGroup_IdOrderByDateAsc(Long groupId);
 
     List<GroupChore> findByGroup_IdAndStatusAndDateBetween(Long groupId, ChoreStatus status, LocalDate startDate, LocalDate endDate);
+
+    List<GroupChore> findByGroup_IdAndDate(Long groupId, LocalDate date);
+
+    List<GroupChore> findByGroup_IdAndDateBetween(Long groupId, LocalDate startDate, LocalDate endDate);
 }
