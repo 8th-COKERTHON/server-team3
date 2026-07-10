@@ -1,6 +1,5 @@
 package com.cotato.cokerthon.domain.chore.entity;
 
-import com.cotato.cokerthon.domain.group.entity.Group;
 import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
@@ -13,10 +12,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class Chore extends BaseTimeEntity {
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id")
-    private Group group;
 
     private String category;
 
@@ -38,8 +33,7 @@ public class Chore extends BaseTimeEntity {
     private Member assignedMember;
 
     @Builder
-    public Chore(Group group, String category, String name, Difficulty difficulty, String memo) {
-        this.group = group;
+    public Chore(String category, String name, Difficulty difficulty, String memo) {
         this.category = category;
         this.name = name;
         this.difficulty = difficulty;

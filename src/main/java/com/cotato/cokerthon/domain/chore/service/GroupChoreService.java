@@ -83,13 +83,9 @@ public class GroupChoreService {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new CustomException(ChoreErrorCode.GROUP_NOT_FOUND));
 
-        // 1. 선택한 카탈로그 항목 조회 및 그룹 소속 검증
+        // 1. 선택한 카탈로그 항목 조회 (카탈로그는 그룹 구분 없는 전역 목록)
         Chore chore = choreRepository.findById(choreId)
                 .orElseThrow(() -> new CustomException(ChoreErrorCode.CHORE_ITEM_NOT_FOUND));
-
-        if (!chore.getGroup().getId().equals(groupId)) {
-            throw new CustomException(ChoreErrorCode.CHORE_ITEM_NOT_IN_GROUP);
-        }
 
         // 2. 새로 입력받은 담당자 정보 및 반복 패턴 검증 (반복 주기는 매번 새로 지정)
         Member assignee = resolveAssignee(group, request.assignType(), request.assigneeId());

@@ -21,7 +21,6 @@ public enum ChoreErrorCode implements ErrorCode {
     REPEAT_PATTERN_REQUIRED(HttpStatus.BAD_REQUEST, "CHORE_ERROR_400_REPEAT_PATTERN_REQUIRED", "반복 주기에 맞는 세부 패턴을 선택해야 합니다."),
     INVALID_REPEAT_PATTERN(HttpStatus.BAD_REQUEST, "CHORE_ERROR_400_INVALID_REPEAT_PATTERN", "반복 세부 패턴 형식이 올바르지 않습니다."),
     CHORE_NOT_IN_GROUP(HttpStatus.BAD_REQUEST, "CHORE_ERROR_400_CHORE_NOT_IN_GROUP", "해당 집안일이 그룹에 속해있지 않습니다."),
-    CHORE_ITEM_NOT_IN_GROUP(HttpStatus.BAD_REQUEST, "CHORE_ERROR_400_CHORE_ITEM_NOT_IN_GROUP", "선택한 집안일 항목이 해당 그룹의 목록이 아닙니다."),
     CHORE_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "CHORE_ERROR_404_NOT_FOUND", "요청을 찾을 수 없습니다."),
     UNAUTHORIZED_DONE(HttpStatus.FORBIDDEN, "CHORE_ERROR_403_FORBIDDEN", "요청을 완료할 권한이 없습니다."),
     ALREADY_DONE(HttpStatus.CONFLICT, "CHORE_ERROR_409_CONFLICT", "이미 완료된 요청입니다.");
