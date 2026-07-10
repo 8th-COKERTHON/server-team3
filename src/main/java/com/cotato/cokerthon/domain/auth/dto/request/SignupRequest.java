@@ -22,7 +22,7 @@ public record SignupRequest(
         )
         String password,
 
-        @Schema(description = "비밀번호 확인", example = "password")
+        @Schema(description = "비밀번호 확인", example = "password1")
         @NotBlank(message = "비밀번호 확인은 필수입니다.")
         String passwordCheck
 ) {
