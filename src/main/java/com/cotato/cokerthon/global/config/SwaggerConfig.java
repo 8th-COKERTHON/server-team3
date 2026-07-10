@@ -25,15 +25,15 @@ import io.swagger.v3.oas.annotations.servers.Server;
 public class SwaggerConfig {
 
     /**
-     * User 관련 API
+     *  관련 API
      */
     @Bean
-    public GroupedOpenApi userApi() {
+    public GroupedOpenApi rouletteApi() {
         return GroupedOpenApi.builder()
-                .group("User")
-                .displayName("User API")
-                .packagesToScan("com.cotato.cokerthon.domain.user.controller")
-                .pathsToMatch("/api/users/**")
+                .group("Roulette")
+                .displayName("roulette API")
+                .packagesToScan("com.cotato.cokerthon.domain.roulette.controller")
+                .pathsToMatch("/api/roulette/**")
                 .build();
     }
 
