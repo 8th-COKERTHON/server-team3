@@ -1,22 +1,15 @@
 package com.cotato.cokerthon.domain.chore.dto.request;
 
 import com.cotato.cokerthon.domain.chore.entity.AssignType;
-import com.cotato.cokerthon.domain.chore.entity.Difficulty;
 import com.cotato.cokerthon.domain.chore.entity.RepeatCycle;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
-public record GroupChoreCreateRequest(
-        @Schema(description = "제목", example = "설거지하기")
-        @NotBlank(message = "제목은 필수입니다.")
+public record GroupChoreFromCatalogRequest(
+        @Schema(description = "제목 (입력하지 않으면 카탈로그의 제목을 그대로 사용)", example = "설거지하기")
         String name,
-
-        @Schema(description = "난이도")
-        @NotNull(message = "난이도는 필수입니다.")
-        Difficulty difficulty,
 
         @Schema(description = "날짜(반복인 경우 시작 날짜)", example = "2026-07-11")
         @NotNull(message = "날짜는 필수입니다.")

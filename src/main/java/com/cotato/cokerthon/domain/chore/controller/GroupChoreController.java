@@ -1,6 +1,7 @@
 package com.cotato.cokerthon.domain.chore.controller;
 
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreCreateRequest;
+import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreFromCatalogRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreStatusUpdateRequest;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreBoardResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreResponse;
@@ -26,7 +27,7 @@ public class GroupChoreController {
 
     private final GroupChoreService groupChoreService;
 
-    @Operation(summary = "집안일 추가 API", description = "그룹에 새로운 집안일을 추가합니다.")
+    @Operation(summary = "집안일 추가 API", description = "완전히 새로운 집안일 항목을 만들고, 이를 바탕으로 그룹에 집안일을 추가합니다.")
     @PostMapping
     public CommonResponse<GroupChoreResponse> createChore(@PathVariable Long groupId,
                                                             @Valid @RequestBody GroupChoreCreateRequest request) {
@@ -34,11 +35,11 @@ public class GroupChoreController {
         return CommonResponse.success(response);
     }
 
-    @Operation(summary = "기존 집안일 기반 추가 API", description = "기존 집안일을 참고하여 새로운 집안일을 추가합니다.")
-    @PostMapping("/{choreId}/copy")
+    @Operation(summary = "카탈로그 기반 집안일 추가 API", description = "미리 정의된 집안일 목록에서 항목을 선택하여 새로운 집안일을 추가합니다. 제목은 수정할 수 있고, 반복 주기는 새로 지정합니다.")
+    @PostMapping("/catalog/{choreId}")
     public CommonResponse<GroupChoreResponse> createChoreFromExisting(@PathVariable Long groupId,
                                                                         @PathVariable Long choreId,
-                                                                        @Valid @RequestBody GroupChoreCreateRequest request) {
+                                                                        @Valid @RequestBody GroupChoreFromCatalogRequest request) {
         GroupChoreResponse response = groupChoreService.createChoreFromExisting(groupId, choreId, request);
         return CommonResponse.success(response);
     }

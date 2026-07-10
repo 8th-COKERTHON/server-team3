@@ -11,6 +11,8 @@ import java.time.LocalDate;
 public record GroupChoreResponse(
         Long id,
         Long groupId,
+        Long choreId,
+        String category,
         String name,
         LocalDate date,
         Difficulty difficulty,
@@ -23,21 +25,23 @@ public record GroupChoreResponse(
         int score,
         ChoreStatus status
 ) {
-    public static GroupChoreResponse from(GroupChore chore) {
+    public static GroupChoreResponse from(GroupChore groupChore) {
         return new GroupChoreResponse(
-                chore.getId(),
-                chore.getGroup().getId(),
-                chore.getName(),
-                chore.getDate(),
-                chore.getDifficulty(),
-                chore.getAssignType(),
-                chore.getAssignee() != null ? chore.getAssignee().getId() : null,
-                chore.getAssignee() != null ? chore.getAssignee().getName() : null,
-                chore.getRepeatCycle(),
-                chore.getRepeatPattern(),
-                chore.getMemo(),
-                chore.getScore(),
-                chore.getStatus()
+                groupChore.getId(),
+                groupChore.getGroup().getId(),
+                groupChore.getChore() != null ? groupChore.getChore().getId() : null,
+                groupChore.getChore() != null ? groupChore.getChore().getCategory() : null,
+                groupChore.getName(),
+                groupChore.getDate(),
+                groupChore.getEffectiveDifficulty(),
+                groupChore.getAssignType(),
+                groupChore.getAssignee() != null ? groupChore.getAssignee().getId() : null,
+                groupChore.getAssignee() != null ? groupChore.getAssignee().getName() : null,
+                groupChore.getRepeatCycle(),
+                groupChore.getRepeatPattern(),
+                groupChore.getMemo(),
+                groupChore.getEffectiveScore(),
+                groupChore.getStatus()
         );
     }
 }
