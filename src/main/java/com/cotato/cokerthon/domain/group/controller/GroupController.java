@@ -2,6 +2,7 @@ package com.cotato.cokerthon.domain.group.controller;
 
 import com.cotato.cokerthon.domain.group.dto.request.GroupCreateRequest;
 import com.cotato.cokerthon.domain.group.dto.request.GroupJoinRequest;
+import com.cotato.cokerthon.domain.group.dto.response.GroupChoreReportResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupCreateResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupInviteCodeResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupJoinResponse;
@@ -44,6 +45,15 @@ public class GroupController {
     public CommonResponse<GroupInviteCodeResponse> getGroupInviteCode(@CurrentUser Member member,
                                                                       @PathVariable("groupId") Long groupId) {
         GroupInviteCodeResponse response = groupService.getGroupInviteCode(member.getId(), groupId);
+        return CommonResponse.success(response);
+    }
+
+    @Operation(summary = "주간 집안일 기여도 리포트 조회 API", description = "그룹원별로 특정 주차에 완료한 집안일 점수를 합산하여 기여도 랭킹을 조회합니다. targetWeek는 조회하고 싶은 주차에 속한 임의의 날짜(yyyy-MM-dd)입니다.")
+    @GetMapping("/{groupId}/chore-report")
+    public CommonResponse<GroupChoreReportResponse> getGroupChoreReport(@CurrentUser Member member,
+                                                                          @PathVariable("groupId") Long groupId,
+                                                                          @RequestParam String targetWeek) {
+        GroupChoreReportResponse response = groupService.getGroupChoreReport(member.getId(), groupId, targetWeek);
         return CommonResponse.success(response);
     }
 }
