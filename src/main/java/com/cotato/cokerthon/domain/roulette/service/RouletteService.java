@@ -1,8 +1,11 @@
 package com.cotato.cokerthon.domain.roulette.service;
 
-import com.cotato.cokerthon.domain.chore.entity.Chore;
+import com.cotato.cokerthon.domain.chore.entity.GroupChore;
+import com.cotato.cokerthon.domain.group.entity.Group;
+import com.cotato.cokerthon.domain.group.entity.GroupMember;
+import com.cotato.cokerthon.domain.group.repository.GroupMemberRepository;
+import com.cotato.cokerthon.domain.group.repository.GroupRepository;
 import com.cotato.cokerthon.domain.member.entity.Member;
-import com.cotato.cokerthon.domain.member.repository.MemberRepository;
 import com.cotato.cokerthon.domain.roulette.dto.response.RouletteResultResponse;
 import com.cotato.cokerthon.domain.roulette.dto.response.RouletteSliceResponse;
 import com.cotato.cokerthon.domain.roulette.entity.RouletteResult;
@@ -24,45 +27,54 @@ import java.util.Random;
 public class RouletteService {
 
     private final RouletteResultRepository rouletteResultRepository;
-    private final MemberRepository memberRepository;
+    private final GroupRepository groupRepository;
+    private final GroupMemberRepository groupMemberRepository;
 
-    // ChoreService에서 호출 — Chore 생성/수정 시 repeatType == ROULETTE이면 이 메서드로 담당자 선정
+    // GroupChoreService에서 호출 — assignType == ROULETTE일 때 담당자 선정 후 결과 저장
     @Transactional
-    public Member spinForChore(Chore chore, LocalDate assignedDate) {
-        List<Member> members = memberRepository.findAll();
-        if (members.isEmpty()) {
-            throw new CustomException(RouletteErrorCode.NO_MEMBERS);
-        }
-
+    public Member spinForChore(GroupChore groupChore) {
+        List<Member> members = getGroupMembers(groupChore.getGroup());
         Member winner = pickWinner(members);
-
         rouletteResultRepository.save(RouletteResult.builder()
                 .member(winner)
-                .chore(chore)
-                .nextWeekStartDate(assignedDate)
+                .groupChore(groupChore)
+                .nextWeekStartDate(groupChore.getDate())
                 .build());
-
         return winner;
     }
 
     // 룰렛 지분 조회 (프론트 룰렛 UI 렌더링용)
-    public List<RouletteSliceResponse> getSlices() {
-        List<Member> members = memberRepository.findAll();
-        if (members.isEmpty()) {
-            throw new CustomException(RouletteErrorCode.NO_MEMBERS);
-        }
+    public List<RouletteSliceResponse> getSlices(Long groupId) {
+        List<Member> members = getGroupMembers(findGroup(groupId));
         return computeSlices(members);
     }
 
     // 룰렛 결과 이력 조회
-    public List<RouletteResultResponse> getResults(LocalDate nextWeekStartDate) {
-        return rouletteResultRepository.findByNextWeekStartDate(nextWeekStartDate).stream()
+    public List<RouletteResultResponse> getResults(Long groupId, LocalDate nextWeekStartDate) {
+        return rouletteResultRepository
+                .findByGroupChore_GroupIdAndNextWeekStartDate(groupId, nextWeekStartDate)
+                .stream()
                 .map(RouletteResultResponse::from)
                 .toList();
     }
 
+    private Group findGroup(Long groupId) {
+        return groupRepository.findById(groupId)
+                .orElseThrow(() -> new CustomException(RouletteErrorCode.GROUP_NOT_FOUND));
+    }
+
+    private List<Member> getGroupMembers(Group group) {
+        List<Member> members = groupMemberRepository.findByGroup(group).stream()
+                .map(GroupMember::getMember)
+                .toList();
+        if (members.isEmpty()) {
+            throw new CustomException(RouletteErrorCode.NO_MEMBERS);
+        }
+        return members;
+    }
+
     // totalPoints 역수 기반 룰렛 지분 계산
-    // 1/(totalPoints+1) 사용 → 0점도 자연스럽게 처리, 많이 할수록 확률 감소
+    // 1/(total_point+1) → 0점도 자연스럽게 처리, 많이 할수록 확률 감소
     private List<RouletteSliceResponse> computeSlices(List<Member> members) {
         double[] inverses = members.stream()
                 .mapToDouble(m -> 1.0 / (m.getTotal_point() + 1))

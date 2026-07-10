@@ -1,6 +1,6 @@
 package com.cotato.cokerthon.domain.roulette.entity;
 
-import com.cotato.cokerthon.domain.chore.entity.Chore;
+import com.cotato.cokerthon.domain.chore.entity.GroupChore;
 import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
@@ -20,17 +20,16 @@ public class RouletteResult extends BaseTimeEntity {
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chore_id", nullable = false)
-    private Chore chore;
+    @JoinColumn(name = "group_chore_id", nullable = false)
+    private GroupChore groupChore;
 
-    // 이 집안일을 수행해야 하는 다음 주 시작일
     @Column(nullable = false)
     private LocalDate nextWeekStartDate;
 
     @Builder
-    public RouletteResult(Member member, Chore chore, LocalDate nextWeekStartDate) {
+    public RouletteResult(Member member, GroupChore groupChore, LocalDate nextWeekStartDate) {
         this.member = member;
-        this.chore = chore;
+        this.groupChore = groupChore;
         this.nextWeekStartDate = nextWeekStartDate;
     }
 }

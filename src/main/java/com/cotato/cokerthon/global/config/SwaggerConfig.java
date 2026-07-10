@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
 public class SwaggerConfig {
 
     /**
-     * Member 관련 API
+     * Roulette 관련 API
      */
     @Bean
     public GroupedOpenApi rouletteApi() {
@@ -33,7 +33,7 @@ public class SwaggerConfig {
                 .group("Roulette")
                 .displayName("roulette API")
                 .packagesToScan("com.cotato.cokerthon.domain.roulette.controller")
-                .pathsToMatch("/api/roulette/**", "/api/roulette")
+                .pathsToMatch("/api/groups/{groupId}/roulette/**")
                 .build();
     }
 
@@ -75,7 +75,6 @@ public class SwaggerConfig {
                 .pathsToMatch("/api/groups/{groupId}/chores/**")
                 .build();
     }
-
 
     /**
      * Member 관련 API

@@ -12,6 +12,7 @@ import com.cotato.cokerthon.domain.group.repository.GroupMemberRepository;
 import com.cotato.cokerthon.domain.group.repository.GroupRepository;
 import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.domain.member.repository.MemberRepository;
+import com.cotato.cokerthon.domain.roulette.service.RouletteService;
 import com.cotato.cokerthon.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class GroupChoreService {
     private final GroupRepository groupRepository;
     private final MemberRepository memberRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final RouletteService rouletteService;
 
     /**
      * 집안일 추가
@@ -58,6 +60,12 @@ public class GroupChoreService {
                 .build();
 
         GroupChore savedChore = groupChoreRepository.save(groupChore);
+
+        if (request.assignType() == AssignType.ROULETTE) {
+            Member winner = rouletteService.spinForChore(savedChore);
+            savedChore.assignTo(winner);
+        }
+
         return GroupChoreResponse.from(savedChore);
     }
 
@@ -91,6 +99,12 @@ public class GroupChoreService {
                 .build();
 
         GroupChore savedChore = groupChoreRepository.save(newGroupChore);
+
+        if (request.assignType() == AssignType.ROULETTE) {
+            Member winner = rouletteService.spinForChore(savedChore);
+            savedChore.assignTo(winner);
+        }
+
         return GroupChoreResponse.from(savedChore);
     }
 

@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface RouletteResultRepository extends JpaRepository<RouletteResult, Long> {
 
-    List<RouletteResult> findByNextWeekStartDate(LocalDate nextWeekStartDate);
+    List<RouletteResult> findByGroupChore_GroupIdAndNextWeekStartDate(Long groupId, LocalDate nextWeekStartDate);
 
-    boolean existsByChoreIdAndNextWeekStartDate(Long choreId, LocalDate nextWeekStartDate);
+    boolean existsByGroupChoreIdAndNextWeekStartDate(Long groupChoreId, LocalDate nextWeekStartDate);
 }

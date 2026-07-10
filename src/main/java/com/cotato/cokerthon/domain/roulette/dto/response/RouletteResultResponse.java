@@ -7,14 +7,14 @@ import java.time.LocalDate;
 public record RouletteResultResponse(
         Long id,
         Long winnerId,
-        Long choreId,
+        Long groupChoreId,
         LocalDate nextWeekStartDate
 ) {
     public static RouletteResultResponse from(RouletteResult result) {
         return new RouletteResultResponse(
                 result.getId(),
                 result.getMember().getId(),
-                result.getChore().getId(),
+                result.getGroupChore().getId(),
                 result.getNextWeekStartDate()
         );
     }
