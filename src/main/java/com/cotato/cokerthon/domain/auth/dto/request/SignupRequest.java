@@ -15,6 +15,10 @@ public record SignupRequest(
 
         @Schema(description = "비밀번호", example = "password")
         @NotBlank(message = "비밀번호는 필수입니다.")
-        String password
+        String password,
+
+        @Schema(description = "비밀번호 확인", example = "password")
+        @NotBlank(message = "비밀번호 확인은 필수입니다.")
+        String passwordCheck
 ) {
 }

@@ -41,7 +41,7 @@ public class ChoreRequestService {
 
     public UnreadCountResponse getUnreadCount(Member member) {
         long receivedUnread = choreRequestRepository.countByReceiverAndIsReadFalse(member);
-        long completionUnread = choreRequestRepository.countBySenderAndStatusAndCompletionReadFalse(member, ChoreStatus.COMPLETED);
+        long completionUnread = choreRequestRepository.countBySenderAndStatusAndCompletionReadFalse(member, ChoreStatus.DONE);
         return new UnreadCountResponse(receivedUnread + completionUnread);
     }
 
@@ -63,11 +63,11 @@ public class ChoreRequestService {
         List<ChoreRequest> requests = choreRequestRepository.findBySenderOrderByCreatedAtDesc(sender);
 
         requests.stream()
-                .filter(r -> r.getStatus() == ChoreStatus.COMPLETED && !r.isCompletionRead())
+                .filter(r -> r.getStatus() == ChoreStatus.DONE && !r.isCompletionRead())
                 .forEach(ChoreRequest::markCompletionRead);
 
         return requests.stream()
-                .filter(r -> r.getStatus() == ChoreStatus.COMPLETED)
+                .filter(r -> r.getStatus() == ChoreStatus.DONE)
                 .map(ChoreRequestResponse::fromSenderView)
                 .toList();
     }
@@ -78,11 +78,11 @@ public class ChoreRequestService {
                 .orElseThrow(() -> new CustomException(ChoreErrorCode.CHORE_REQUEST_NOT_FOUND));
 
         if (!choreRequest.getReceiver().getId().equals(receiver.getId())) {
-            throw new CustomException(ChoreErrorCode.UNAUTHORIZED_COMPLETE);
+            throw new CustomException(ChoreErrorCode.UNAUTHORIZED_DONE);
         }
 
-        if (choreRequest.getStatus() == ChoreStatus.COMPLETED) {
-            throw new CustomException(ChoreErrorCode.ALREADY_COMPLETED);
+        if (choreRequest.getStatus() == ChoreStatus.DONE) {
+            throw new CustomException(ChoreErrorCode.ALREADY_DONE);
         }
 
         choreRequest.complete();

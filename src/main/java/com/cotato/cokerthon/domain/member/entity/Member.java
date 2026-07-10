@@ -21,8 +21,12 @@ public class Member extends BaseTimeEntity {
     private String password;
 
     /** 이름 */
-    @Column(nullable = false, length = 256, unique = true)
+    @Column(nullable = false, length = 256)
     private String name;
+
+    /** 총 기여도 점수 */
+    @Column(nullable = false)
+    private int total_point = 0;
 
     public void updateName(String name) {
         this.name = name;

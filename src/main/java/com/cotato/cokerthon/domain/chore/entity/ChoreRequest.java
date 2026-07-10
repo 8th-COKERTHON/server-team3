@@ -31,7 +31,7 @@ public class ChoreRequest extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private ChoreStatus status = ChoreStatus.PENDING;
+    private ChoreStatus status = ChoreStatus.SCHEDULED;
 
     /** 받는 사람이 요청을 읽었는지 여부 */
     @Column(nullable = false)
@@ -48,7 +48,7 @@ public class ChoreRequest extends BaseTimeEntity {
     }
 
     public void complete() {
-        this.status = ChoreStatus.COMPLETED;
+        this.status = ChoreStatus.DONE;
     }
 
     public void markCompletionRead() {

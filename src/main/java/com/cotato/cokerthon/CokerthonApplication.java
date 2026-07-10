@@ -9,7 +9,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @SpringBootApplication
 public class CokerthonApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(CokerthonApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(CokerthonApplication.class, args);
+    }
 }
