@@ -14,7 +14,7 @@ import java.util.List;
 public class CorsConfig implements WebMvcConfigurer {
 
     private static final List<String> ALLOWED_ORIGINS = List.of(
-            "https://15.164.164.141.nip.io",
+            "https://43.202.209.89.nip.io",
             "http://localhost:3000"
     );
 

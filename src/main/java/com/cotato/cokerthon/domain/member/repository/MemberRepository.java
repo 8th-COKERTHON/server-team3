@@ -2,7 +2,14 @@ package com.cotato.cokerthon.domain.member.repository;
 
 import com.cotato.cokerthon.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-// TODO: 다른 팀원이 구현 예정 — 현재는 컴파일용 스텁
+import java.util.Optional;
+
+@Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
+
+    Optional<Member> findByLoginId(String loginId);
+
+    boolean existsByLoginId(String loginId);
 }

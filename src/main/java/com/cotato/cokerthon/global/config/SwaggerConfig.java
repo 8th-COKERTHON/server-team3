@@ -25,7 +25,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
 public class SwaggerConfig {
 
     /**
-     *  관련 API
+     * Member 관련 API
      */
     @Bean
     public GroupedOpenApi rouletteApi() {
@@ -34,6 +34,36 @@ public class SwaggerConfig {
                 .displayName("roulette API")
                 .packagesToScan("com.cotato.cokerthon.domain.roulette.controller")
                 .pathsToMatch("/api/roulette/**")
+                .group("Member")
+                .displayName("Member API")
+                .packagesToScan("com.cotato.cokerthon.domain.member.controller")
+                .pathsToMatch("/api/members/**")
+                .build();
+    }
+
+    /**
+     * Auth 관련 API
+     */
+    @Bean
+    public GroupedOpenApi authApi() {
+        return GroupedOpenApi.builder()
+                .group("Auth")
+                .displayName("Auth API")
+                .packagesToScan("com.cotato.cokerthon.domain.auth.controller")
+                .pathsToMatch("/api/auth/**")
+                .build();
+    }
+
+    /**
+     * Group 관련 API
+     */
+    @Bean
+    public GroupedOpenApi groupApi() {
+        return GroupedOpenApi.builder()
+                .group("Group")
+                .displayName("Group API")
+                .packagesToScan("com.cotato.cokerthon.domain.group.controller")
+                .pathsToMatch("/api/groups/**")
                 .build();
     }
 
