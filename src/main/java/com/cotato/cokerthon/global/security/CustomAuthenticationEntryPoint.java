@@ -6,6 +6,7 @@ import com.cotato.cokerthon.global.exception.error.GlobalErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -16,9 +17,11 @@ import java.io.IOException;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    // Spring이 자동 구성한 빈을 사용 (JavaTimeModule 등록되어 있어 LocalDateTime 직렬화 가능)
+    private final ObjectMapper objectMapper;
 
     @Override
     public void commence(HttpServletRequest request,

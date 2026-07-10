@@ -3,10 +3,7 @@ package com.cotato.cokerthon.domain.chore.service;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreCreateRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreFromCatalogRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreStatusUpdateRequest;
-import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreBoardResponse;
-import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreCalendarResponse;
-import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreDailyResponse;
-import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreResponse;
+import com.cotato.cokerthon.domain.chore.dto.response.*;
 import com.cotato.cokerthon.domain.chore.entity.*;
 import com.cotato.cokerthon.domain.chore.exception.ChoreErrorCode;
 import com.cotato.cokerthon.domain.chore.repository.ChoreRepository;
@@ -183,6 +180,33 @@ public class GroupChoreService {
             result.add(new GroupChoreCalendarResponse(date, choresByDate.getOrDefault(date, List.of())));
         }
         return result;
+    }
+
+    /**
+     * 오늘 날짜에 특정 담당자에게 배정된 집안일 조회
+     */
+    public GroupChoreByAssigneeResponse getTodayChoresByAssignee(Long groupId, Long memberId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new CustomException(ChoreErrorCode.GROUP_NOT_FOUND));
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(ChoreErrorCode.ASSIGNEE_NOT_FOUND));
+
+        if (!groupMemberRepository.existsByGroupAndMember(group, member)) {
+            throw new CustomException(ChoreErrorCode.ASSIGNEE_NOT_IN_GROUP);
+        }
+
+        LocalDate today = LocalDate.now();
+        List<GroupChore> memberChores = groupChoreRepository.findByGroup_IdAndDate(groupId, today).stream()
+                .filter(chore -> chore.getAssignee() != null && chore.getAssignee().getId().equals(memberId))
+                .toList();
+
+        int completedCount = (int) memberChores.stream().filter(chore -> chore.getStatus() == ChoreStatus.DONE).count();
+        List<GroupChoreResponse> responses = memberChores.stream()
+                .map(GroupChoreResponse::from)
+                .collect(Collectors.toList());
+
+        return new GroupChoreByAssigneeResponse(today, member.getId(), member.getName(), memberChores.size(), completedCount, responses);
     }
 
     /**
