@@ -52,6 +52,11 @@ public class GroupChore extends BaseTimeEntity {
     @Column(nullable = false)
     private int score;
 
+    // 진행 단계 (예정/진행중/완료)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ChoreStatus status;
+
     @Builder
     public GroupChore(Group group, Member assignee, String name, LocalDate date,
                        AssignType assignType, RepeatCycle repeatCycle, String repeatPattern,
@@ -66,6 +71,7 @@ public class GroupChore extends BaseTimeEntity {
         this.memo = memo;
         this.difficulty = difficulty;
         this.score = difficulty.getDefaultScore(); // 5점부터 +5점씩 계산된 점수 반영
+        this.status = ChoreStatus.SCHEDULED; // 생성 시 항상 예정 상태로 시작
     }
 
     // 난이도 수정 메서드
@@ -77,5 +83,10 @@ public class GroupChore extends BaseTimeEntity {
     // 담당자 배정/변경 메서드 (직접선택, 룰렛 결과 반영)
     public void assignTo(Member assignee) {
         this.assignee = assignee;
+    }
+
+    // 진행 단계 변경 메서드 (예정 -> 진행중 -> 완료)
+    public void updateStatus(ChoreStatus status) {
+        this.status = status;
     }
 }

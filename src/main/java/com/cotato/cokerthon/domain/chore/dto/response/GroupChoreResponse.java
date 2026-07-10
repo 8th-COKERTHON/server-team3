@@ -1,6 +1,7 @@
 package com.cotato.cokerthon.domain.chore.dto.response;
 
 import com.cotato.cokerthon.domain.chore.entity.AssignType;
+import com.cotato.cokerthon.domain.chore.entity.ChoreStatus;
 import com.cotato.cokerthon.domain.chore.entity.Difficulty;
 import com.cotato.cokerthon.domain.chore.entity.GroupChore;
 import com.cotato.cokerthon.domain.chore.entity.RepeatCycle;
@@ -19,7 +20,8 @@ public record GroupChoreResponse(
         RepeatCycle repeatCycle,
         String repeatPattern,
         String memo,
-        int score
+        int score,
+        ChoreStatus status
 ) {
     public static GroupChoreResponse from(GroupChore chore) {
         return new GroupChoreResponse(
@@ -34,7 +36,8 @@ public record GroupChoreResponse(
                 chore.getRepeatCycle(),
                 chore.getRepeatPattern(),
                 chore.getMemo(),
-                chore.getScore()
+                chore.getScore(),
+                chore.getStatus()
         );
     }
 }

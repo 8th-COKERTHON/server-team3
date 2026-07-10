@@ -1,8 +1,11 @@
 package com.cotato.cokerthon.domain.chore.service;
 
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreCreateRequest;
+import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreStatusUpdateRequest;
+import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreBoardResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreResponse;
 import com.cotato.cokerthon.domain.chore.entity.AssignType;
+import com.cotato.cokerthon.domain.chore.entity.ChoreStatus;
 import com.cotato.cokerthon.domain.chore.entity.GroupChore;
 import com.cotato.cokerthon.domain.chore.entity.RepeatCycle;
 import com.cotato.cokerthon.domain.chore.exception.ChoreErrorCode;
@@ -19,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -94,6 +99,45 @@ public class GroupChoreService {
         return GroupChoreResponse.from(savedChore);
     }
 
+    /**
+     * 그룹의 집안일을 예정/진행중/완료 세 단계로 나누어 조회
+     */
+    public GroupChoreBoardResponse getChoreBoard(Long groupId) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new CustomException(ChoreErrorCode.GROUP_NOT_FOUND);
+        }
+
+        List<GroupChore> chores = groupChoreRepository.findByGroup_IdOrderByDateAsc(groupId);
+
+        return new GroupChoreBoardResponse(
+                filterByStatus(chores, ChoreStatus.SCHEDULED),
+                filterByStatus(chores, ChoreStatus.IN_PROGRESS),
+                filterByStatus(chores, ChoreStatus.DONE)
+        );
+    }
+
+    private List<GroupChoreResponse> filterByStatus(List<GroupChore> chores, ChoreStatus status) {
+        return chores.stream()
+                .filter(chore -> chore.getStatus() == status)
+                .map(GroupChoreResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 집안일 진행 단계 변경 (예정 -> 진행중 -> 완료)
+     */
+    @Transactional
+    public GroupChoreResponse updateChoreStatus(Long groupId, Long choreId, GroupChoreStatusUpdateRequest request) {
+        GroupChore chore = groupChoreRepository.findById(choreId)
+                .orElseThrow(() -> new CustomException(ChoreErrorCode.CHORE_NOT_FOUND));
+
+        if (!chore.getGroup().getId().equals(groupId)) {
+            throw new CustomException(ChoreErrorCode.CHORE_NOT_IN_GROUP);
+        }
+
+        chore.updateStatus(request.status());
+        return GroupChoreResponse.from(chore);
+    }
 
     // 담당자 지정 방식(선택안함/직접선택/룰렛)에 따라 담당자를 결정
     private Member resolveAssignee(Group group, AssignType assignType, Long assigneeId) {

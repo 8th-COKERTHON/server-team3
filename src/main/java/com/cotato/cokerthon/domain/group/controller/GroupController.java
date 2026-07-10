@@ -3,6 +3,7 @@ package com.cotato.cokerthon.domain.group.controller;
 import com.cotato.cokerthon.domain.group.dto.request.GroupCreateRequest;
 import com.cotato.cokerthon.domain.group.dto.request.GroupJoinRequest;
 import com.cotato.cokerthon.domain.group.dto.response.GroupCreateResponse;
+import com.cotato.cokerthon.domain.group.dto.response.GroupInviteCodeResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupJoinResponse;
 import com.cotato.cokerthon.domain.group.service.GroupService;
 import com.cotato.cokerthon.domain.member.entity.Member;
@@ -12,10 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/groups")
@@ -38,6 +36,14 @@ public class GroupController {
     public CommonResponse<GroupJoinResponse> joinGroup(@CurrentUser Member member,
                                                          @Valid @RequestBody GroupJoinRequest request) {
         GroupJoinResponse response = groupService.joinGroup(member.getId(), request);
+        return CommonResponse.success(response);
+    }
+
+    @Operation(summary = "그룹 초대 코드 조회 API", description = "내가 가입한 그룹의 초대 코드를 조회합니다.")
+    @GetMapping("/{groupId}/invite-code")
+    public CommonResponse<GroupInviteCodeResponse> getGroupInviteCode(@CurrentUser Member member,
+                                                                      @PathVariable("groupId") Long groupId) {
+        GroupInviteCodeResponse response = groupService.getGroupInviteCode(member.getId(), groupId);
         return CommonResponse.success(response);
     }
 }
