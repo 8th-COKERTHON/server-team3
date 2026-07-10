@@ -4,6 +4,8 @@ import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreCreateRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreFromCatalogRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreStatusUpdateRequest;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreBoardResponse;
+import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreCalendarResponse;
+import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreDailyResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreResponse;
 import com.cotato.cokerthon.domain.chore.entity.*;
 import com.cotato.cokerthon.domain.chore.exception.ChoreErrorCode;
@@ -22,7 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -141,6 +145,44 @@ public class GroupChoreService {
                 .filter(chore -> chore.getStatus() == status)
                 .map(GroupChoreResponse::from)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 특정 날짜의 집안일 조회 (오늘의 과업)
+     */
+    public GroupChoreDailyResponse getChoresByDate(Long groupId, LocalDate date) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new CustomException(ChoreErrorCode.GROUP_NOT_FOUND);
+        }
+
+        List<GroupChore> chores = groupChoreRepository.findByGroup_IdAndDate(groupId, date);
+        int completedCount = (int) chores.stream().filter(chore -> chore.getStatus() == ChoreStatus.DONE).count();
+
+        List<GroupChoreResponse> responses = chores.stream()
+                .map(GroupChoreResponse::from)
+                .collect(Collectors.toList());
+
+        return new GroupChoreDailyResponse(date, chores.size(), completedCount, responses);
+    }
+
+    /**
+     * 날짜 범위별 집안일 조회 (캘린더 표시용)
+     */
+    public List<GroupChoreCalendarResponse> getChoresByDateRange(Long groupId, LocalDate startDate, LocalDate endDate) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new CustomException(ChoreErrorCode.GROUP_NOT_FOUND);
+        }
+
+        List<GroupChore> chores = groupChoreRepository.findByGroup_IdAndDateBetween(groupId, startDate, endDate);
+        Map<LocalDate, List<GroupChoreResponse>> choresByDate = chores.stream()
+                .collect(Collectors.groupingBy(GroupChore::getDate,
+                        Collectors.mapping(GroupChoreResponse::from, Collectors.toList())));
+
+        List<GroupChoreCalendarResponse> result = new ArrayList<>();
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            result.add(new GroupChoreCalendarResponse(date, choresByDate.getOrDefault(date, List.of())));
+        }
+        return result;
     }
 
     /**

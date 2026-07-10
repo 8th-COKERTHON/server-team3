@@ -4,6 +4,8 @@ import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreCreateRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreFromCatalogRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreStatusUpdateRequest;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreBoardResponse;
+import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreCalendarResponse;
+import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreDailyResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreResponse;
 import com.cotato.cokerthon.domain.chore.service.GroupChoreService;
 import com.cotato.cokerthon.global.common.response.CommonResponse;
@@ -11,13 +13,18 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/groups/{groupId}/chores")
@@ -48,6 +55,25 @@ public class GroupChoreController {
     @GetMapping("/board")
     public CommonResponse<GroupChoreBoardResponse> getChoreBoard(@PathVariable Long groupId) {
         GroupChoreBoardResponse response = groupChoreService.getChoreBoard(groupId);
+        return CommonResponse.success(response);
+    }
+
+    @Operation(summary = "날짜별 집안일 조회 API", description = "특정 날짜에 등록된 집안일 목록과 완료 개수를 조회합니다 (오늘의 과업). date를 생략하면 오늘 날짜로 조회합니다.")
+    @GetMapping("/daily")
+    public CommonResponse<GroupChoreDailyResponse> getChoresByDate(
+            @PathVariable Long groupId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        GroupChoreDailyResponse response = groupChoreService.getChoresByDate(groupId, date != null ? date : LocalDate.now());
+        return CommonResponse.success(response);
+    }
+
+    @Operation(summary = "캘린더용 날짜 범위 집안일 조회 API", description = "startDate부터 endDate까지 날짜별 집안일 목록을 조회합니다 (캘린더 표시용).")
+    @GetMapping("/calendar")
+    public CommonResponse<List<GroupChoreCalendarResponse>> getChoresByDateRange(
+            @PathVariable Long groupId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        List<GroupChoreCalendarResponse> response = groupChoreService.getChoresByDateRange(groupId, startDate, endDate);
         return CommonResponse.success(response);
     }
 
