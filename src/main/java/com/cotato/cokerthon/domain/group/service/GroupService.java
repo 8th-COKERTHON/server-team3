@@ -3,6 +3,7 @@ package com.cotato.cokerthon.domain.group.service;
 import com.cotato.cokerthon.domain.group.dto.request.GroupCreateRequest;
 import com.cotato.cokerthon.domain.group.dto.request.GroupJoinRequest;
 import com.cotato.cokerthon.domain.group.dto.response.GroupCreateResponse;
+import com.cotato.cokerthon.domain.group.dto.response.GroupInviteCodeResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupJoinResponse;
 import com.cotato.cokerthon.domain.group.entity.Group;
 import com.cotato.cokerthon.domain.group.entity.GroupMember;
@@ -66,5 +67,24 @@ public class GroupService {
         groupMemberRepository.save(groupMember);
 
         return GroupJoinResponse.from(group);
+    }
+
+    /**
+     * 3. 내가 가입한 그룹의 초대 코드 조회
+     */
+    public GroupInviteCodeResponse getGroupInviteCode(Long memberId, Long groupId) {
+        // 1. 회원 및 그룹 조회
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(GroupErrorCode.MEMBER_NOT_FOUND));
+
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new CustomException(GroupErrorCode.GROUP_NOT_FOUND));
+
+        // 2. 해당 그룹의 멤버가 맞는지 검증
+        if (!groupMemberRepository.existsByGroupAndMember(group, member)) {
+            throw new CustomException(GroupErrorCode.NOT_GROUP_MEMBER);
+        }
+
+        return GroupInviteCodeResponse.from(group);
     }
 }

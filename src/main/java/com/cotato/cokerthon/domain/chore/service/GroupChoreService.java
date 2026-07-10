@@ -1,11 +1,13 @@
 package com.cotato.cokerthon.domain.chore.service;
 
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreCreateRequest;
+import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreFromCatalogRequest;
+import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreStatusUpdateRequest;
+import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreBoardResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreResponse;
-import com.cotato.cokerthon.domain.chore.entity.AssignType;
-import com.cotato.cokerthon.domain.chore.entity.GroupChore;
-import com.cotato.cokerthon.domain.chore.entity.RepeatCycle;
+import com.cotato.cokerthon.domain.chore.entity.*;
 import com.cotato.cokerthon.domain.chore.exception.ChoreErrorCode;
+import com.cotato.cokerthon.domain.chore.repository.ChoreRepository;
 import com.cotato.cokerthon.domain.chore.repository.GroupChoreRepository;
 import com.cotato.cokerthon.domain.group.entity.Group;
 import com.cotato.cokerthon.domain.group.repository.GroupMemberRepository;
@@ -20,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +35,7 @@ public class GroupChoreService {
     private static final Set<String> VALID_DAYS_OF_WEEK = Set.of("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN");
 
     private final GroupChoreRepository groupChoreRepository;
+    private final ChoreRepository choreRepository;
     private final GroupRepository groupRepository;
     private final MemberRepository memberRepository;
     private final GroupMemberRepository groupMemberRepository;
@@ -70,35 +75,41 @@ public class GroupChoreService {
     }
 
     /**
-     * 기존 집안일을 기반으로 새로운 집안일 추가
+     * 미리 정의된 집안일 목록(카탈로그)에서 항목을 선택해 새로운 집안일 추가
      */
     @Transactional
-    public GroupChoreResponse createChoreFromExisting(Long groupId, Long existingChoreId, GroupChoreCreateRequest request) {
+    public GroupChoreResponse createChoreFromExisting(Long groupId, Long choreId, GroupChoreFromCatalogRequest request) {
         Group group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new CustomException(ChoreErrorCode.GROUP_NOT_FOUND));
 
-        // 1. 복사 대상이 되는 기존 집안일 조회
-        GroupChore existingChore = groupChoreRepository.findById(existingChoreId)
-                .orElseThrow(() -> new CustomException(ChoreErrorCode.CHORE_NOT_FOUND));
+        // 1. 선택한 카탈로그 항목 조회 및 그룹 소속 검증
+        Chore chore = choreRepository.findById(choreId)
+                .orElseThrow(() -> new CustomException(ChoreErrorCode.CHORE_ITEM_NOT_FOUND));
 
-        // 2. 새로 입력받은 담당자 정보 및 반복 패턴 검증
+        if (!chore.getGroup().getId().equals(groupId)) {
+            throw new CustomException(ChoreErrorCode.CHORE_ITEM_NOT_IN_GROUP);
+        }
+
+        // 2. 새로 입력받은 담당자 정보 및 반복 패턴 검증 (반복 주기는 매번 새로 지정)
         Member assignee = resolveAssignee(group, request.assignType(), request.assigneeId());
         validateRepeatPattern(request.repeatCycle(), request.repeatPattern());
 
-        // 3. 기존 값 + 수정된 값 조합하여 새 엔티티 빌드
-        GroupChore newGroupChore = GroupChore.builder()
+        // 3. 제목은 입력값이 있으면 그 값을, 없으면 카탈로그의 제목을 사용
+        String name = (request.name() != null && !request.name().isBlank()) ? request.name() : chore.getName();
+
+        GroupChore groupChore = GroupChore.builder()
                 .group(group)
-                .assignee(assignee) // 새로 지정한 담당자
-                .name(request.name()) // 수정 가능하게 입력받은 새 이름
-                .difficulty(request.difficulty()) // 수정 가능하게 입력받은 새 난이도
-                .date(request.date()) // 새로 지정한 날짜
-                .assignType(request.assignType()) // 새로 지정한 담당자 할당 타입
-                .repeatCycle(request.repeatCycle()) // 새로 지정한 반복 주기
-                .repeatPattern(request.repeatPattern()) // 새로 지정한 반복 패턴
-                .memo(request.memo() != null ? request.memo() : existingChore.getMemo()) // request에 메모가 없으면 기존 메모 유지
+                .assignee(assignee)
+                .chore(chore)
+                .name(name)
+                .date(request.date())
+                .assignType(request.assignType())
+                .repeatCycle(request.repeatCycle())
+                .repeatPattern(request.repeatPattern())
+                .memo(request.memo())
                 .build();
 
-        GroupChore savedChore = groupChoreRepository.save(newGroupChore);
+        GroupChore savedChore = groupChoreRepository.save(groupChore);
 
         if (request.assignType() == AssignType.ROULETTE) {
             Member winner = rouletteService.spinForChore(savedChore);
@@ -108,6 +119,45 @@ public class GroupChoreService {
         return GroupChoreResponse.from(savedChore);
     }
 
+    /**
+     * 그룹의 집안일을 예정/진행중/완료 세 단계로 나누어 조회
+     */
+    public GroupChoreBoardResponse getChoreBoard(Long groupId) {
+        if (!groupRepository.existsById(groupId)) {
+            throw new CustomException(ChoreErrorCode.GROUP_NOT_FOUND);
+        }
+
+        List<GroupChore> chores = groupChoreRepository.findByGroup_IdOrderByDateAsc(groupId);
+
+        return new GroupChoreBoardResponse(
+                filterByStatus(chores, ChoreStatus.SCHEDULED),
+                filterByStatus(chores, ChoreStatus.IN_PROGRESS),
+                filterByStatus(chores, ChoreStatus.DONE)
+        );
+    }
+
+    private List<GroupChoreResponse> filterByStatus(List<GroupChore> chores, ChoreStatus status) {
+        return chores.stream()
+                .filter(chore -> chore.getStatus() == status)
+                .map(GroupChoreResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 집안일 진행 단계 변경 (예정 -> 진행중 -> 완료)
+     */
+    @Transactional
+    public GroupChoreResponse updateChoreStatus(Long groupId, Long choreId, GroupChoreStatusUpdateRequest request) {
+        GroupChore chore = groupChoreRepository.findById(choreId)
+                .orElseThrow(() -> new CustomException(ChoreErrorCode.CHORE_NOT_FOUND));
+
+        if (!chore.getGroup().getId().equals(groupId)) {
+            throw new CustomException(ChoreErrorCode.CHORE_NOT_IN_GROUP);
+        }
+
+        chore.updateStatus(request.status());
+        return GroupChoreResponse.from(chore);
+    }
 
     // 담당자 지정 방식(선택안함/직접선택/룰렛)에 따라 담당자를 결정
     private Member resolveAssignee(Group group, AssignType assignType, Long assigneeId) {
