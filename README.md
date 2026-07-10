@@ -54,3 +54,12 @@ MySQL을 별도로 띄운 뒤 실행합니다.
 
 ## 룰렛 (Roulette)
 - 그룹 내 누적 기여도가 낮을수록 당첨 확률이 높은 역수 기반 룰렛으로 담당자 자동 배정
+<br>
+
+# 역할 분담
+
+| <img src="https://github.com/leehwx.png" width="100"> | <img src="https://github.com/Junseung-Ock.png" width="100"> |
+|:---:|:---:|
+| **해원** | **준승** |
+| [leehwx](https://github.com/leehwx) | [Junseung-Ock](https://github.com/Junseung-Ock) |
+| CI/CD 배포 <br> 인증 <br> 집안일 관리<br> | 집안일 룰렛<br>알림 |
