@@ -4,6 +4,7 @@ import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreCreateRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreFromCatalogRequest;
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreStatusUpdateRequest;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreBoardResponse;
+import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreByAssigneeResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreCalendarResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreDailyResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreResponse;
@@ -74,6 +75,14 @@ public class GroupChoreController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         List<GroupChoreCalendarResponse> response = groupChoreService.getChoresByDateRange(groupId, startDate, endDate);
+        return CommonResponse.success(response);
+    }
+
+    @Operation(summary = "담당자별 집안일 조회 API", description = "오늘 날짜에 특정 담당자에게 배정된 집안일을 조회합니다.")
+    @GetMapping("/by-assignee")
+    public CommonResponse<GroupChoreByAssigneeResponse> getTodayChoresByAssignee(@PathVariable Long groupId,
+                                                                                   @RequestParam Long memberId) {
+        GroupChoreByAssigneeResponse response = groupChoreService.getTodayChoresByAssignee(groupId, memberId);
         return CommonResponse.success(response);
     }
 
