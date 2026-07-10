@@ -9,6 +9,7 @@ import com.cotato.cokerthon.domain.group.dto.response.GroupChoreReportResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupCreateResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupInviteCodeResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupJoinResponse;
+import com.cotato.cokerthon.domain.group.dto.response.GroupMembersResponse;
 import com.cotato.cokerthon.domain.group.entity.Group;
 import com.cotato.cokerthon.domain.group.entity.GroupMember;
 import com.cotato.cokerthon.domain.group.exception.GroupErrorCode;
@@ -184,6 +185,23 @@ public class GroupService {
         }
 
         return new GroupChoreReportResponse(weekLabel, rankInfos);
+    }
+
+    /**
+     * 그룹 멤버 목록 조회
+     */
+    public GroupMembersResponse getGroupMembers(Long memberId, Long groupId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new CustomException(GroupErrorCode.MEMBER_NOT_FOUND));
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new CustomException(GroupErrorCode.GROUP_NOT_FOUND));
+
+        if (!groupMemberRepository.existsByGroupAndMember(group, member)) {
+            throw new CustomException(GroupErrorCode.NOT_GROUP_MEMBER);
+        }
+
+        List<GroupMember> groupMembers = groupMemberRepository.findByGroup(group);
+        return GroupMembersResponse.from(group, groupMembers);
     }
 
     // 서비스 내부에서만 사용할 임시 DTO record

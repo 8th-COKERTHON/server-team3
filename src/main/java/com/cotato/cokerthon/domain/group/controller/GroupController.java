@@ -6,6 +6,7 @@ import com.cotato.cokerthon.domain.group.dto.response.GroupChoreReportResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupCreateResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupInviteCodeResponse;
 import com.cotato.cokerthon.domain.group.dto.response.GroupJoinResponse;
+import com.cotato.cokerthon.domain.group.dto.response.GroupMembersResponse;
 import com.cotato.cokerthon.domain.group.service.GroupService;
 import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.global.common.response.CommonResponse;
@@ -45,6 +46,14 @@ public class GroupController {
     public CommonResponse<GroupInviteCodeResponse> getGroupInviteCode(@CurrentUser Member member,
                                                                       @PathVariable("groupId") Long groupId) {
         GroupInviteCodeResponse response = groupService.getGroupInviteCode(member.getId(), groupId);
+        return CommonResponse.success(response);
+    }
+
+    @Operation(summary = "팀 멤버 목록 조회 API", description = "그룹에 속한 멤버 목록을 조회합니다.")
+    @GetMapping("/{groupId}/members")
+    public CommonResponse<GroupMembersResponse> getGroupMembers(@CurrentUser Member member,
+                                                                 @PathVariable("groupId") Long groupId) {
+        GroupMembersResponse response = groupService.getGroupMembers(member.getId(), groupId);
         return CommonResponse.success(response);
     }
 
