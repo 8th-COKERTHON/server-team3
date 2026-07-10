@@ -154,8 +154,62 @@ public class GroupChoreService {
             throw new CustomException(ChoreErrorCode.CHORE_NOT_IN_GROUP);
         }
 
-        chore.updateStatus(request.status());
+        ChoreStatus previousStatus = chore.getStatus();
+        ChoreStatus newStatus = request.status();
+
+        // 기존에 완료 상태였다면, 그때 반영했던 점수를 먼저 되돌린다
+        // (완료 -> 완료 취소는 물론, 완료 -> 완료(수행자 재지정)인 경우에도 재계산을 위해 반드시 필요)
+        if (previousStatus == ChoreStatus.DONE) {
+            revertContributionOnCancel(chore);
+            chore.markPerformedBy(null);
+        }
+
+        // 새로 완료 상태가 된다면, 수행자를 지정해 점수를 다시 반영한다
+        if (newStatus == ChoreStatus.DONE) {
+            // 수행자를 지정하지 않으면 담당자가 직접 수행한 것으로 처리
+            Member performer = request.performerId() != null
+                    ? resolvePerformer(chore.getGroup(), request.performerId())
+                    : chore.getAssignee();
+            chore.markPerformedBy(performer);
+            applyContributionOnComplete(chore, performer);
+        }
+
+        chore.updateStatus(newStatus);
         return GroupChoreResponse.from(chore);
+    }
+
+    // 실제로 집안일을 수행한 사람이 그룹에 속해있는지 확인
+    private Member resolvePerformer(Group group, Long performerId) {
+        Member performer = memberRepository.findById(performerId)
+                .orElseThrow(() -> new CustomException(ChoreErrorCode.ASSIGNEE_NOT_FOUND));
+
+        if (!groupMemberRepository.existsByGroupAndMember(group, performer)) {
+            throw new CustomException(ChoreErrorCode.ASSIGNEE_NOT_IN_GROUP);
+        }
+
+        return performer;
+    }
+
+    // 완료 처리: 수행자에게 집안일 점수를 더하고, 담당자와 수행자가 다르면 담당자에게 감점을 적용
+    private void applyContributionOnComplete(GroupChore chore, Member performer) {
+        if (chore.isDelegated()) {
+            chore.getAssignee().addPoint(-GroupChore.DELEGATE_PENALTY);
+        }
+        if (performer != null) {
+            performer.addPoint(chore.getEffectiveScore());
+        }
+    }
+
+    // 완료 취소: 완료 처리 때 반영했던 점수를 반대로 되돌림
+    private void revertContributionOnCancel(GroupChore chore) {
+        Member performer = chore.getPerformedBy();
+
+        if (chore.isDelegated()) {
+            chore.getAssignee().addPoint(GroupChore.DELEGATE_PENALTY);
+        }
+        if (performer != null) {
+            performer.addPoint(-chore.getEffectiveScore());
+        }
     }
 
     // 담당자 지정 방식(선택안함/직접선택/룰렛)에 따라 담당자를 결정

@@ -35,4 +35,9 @@ public class Member extends BaseTimeEntity {
     public void updatePassword(String password) {
         this.password = password;
     }
+
+    // 기여도 점수 증감 (집안일 완료/완료 취소 시 반영, 최소 0점)
+    public void addPoint(int point) {
+        this.total_point = Math.max(0, this.total_point + point);
+    }
 }
