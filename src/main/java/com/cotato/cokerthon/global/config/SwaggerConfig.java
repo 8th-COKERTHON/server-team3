@@ -72,7 +72,7 @@ public class SwaggerConfig {
                 .group("Chore")
                 .displayName("Chore API")
                 .packagesToScan("com.cotato.cokerthon.domain.chore.controller")
-                .pathsToMatch("/api/groups/{groupId}/chores/**")
+                .pathsToMatch("/api/groups/{groupId}/chores/**", "/api/chore-requests/**")
                 .build();
     }
 
