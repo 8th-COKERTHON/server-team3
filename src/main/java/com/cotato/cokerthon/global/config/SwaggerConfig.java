@@ -50,5 +50,18 @@ public class SwaggerConfig {
                 .build();
     }
 
+    /**
+     * Group 관련 API
+     */
+    @Bean
+    public GroupedOpenApi groupApi() {
+        return GroupedOpenApi.builder()
+                .group("Group")
+                .displayName("Group API")
+                .packagesToScan("com.cotato.cokerthon.domain.group.controller")
+                .pathsToMatch("/api/groups/**")
+                .build();
+    }
+
 
 }

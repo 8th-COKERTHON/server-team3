@@ -34,6 +34,10 @@ public class AuthService {
             throw new CustomException(AuthErrorCode.DUPLICATE_LOGIN_ID);
         }
 
+        if (!request.password().equals(request.passwordCheck())) {
+            throw new CustomException(AuthErrorCode.PASSWORD_MISMATCH);
+        }
+
         String encodedPassword = passwordEncoder.encode(request.password());
 
         // 4. User 엔티티 생성 및 저장
