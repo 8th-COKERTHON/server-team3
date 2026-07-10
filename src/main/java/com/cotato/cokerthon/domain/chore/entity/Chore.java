@@ -1,6 +1,7 @@
 package com.cotato.cokerthon.domain.chore.entity;
 
 import com.cotato.cokerthon.domain.group.entity.Group;
+import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.global.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -28,8 +29,13 @@ public class Chore extends BaseTimeEntity {
 
     @Column(nullable = false)
     private int score;
+    private AssignType assignType;
 
     private String memo;
+    // ROULETTE 선택 시 룰렛으로 선정된 담당자, MANUAL 선택 시 직접 지정된 담당자
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_member_id")
+    private Member assignedMember;
 
     @Builder
     public Chore(Group group, String category, String name, Difficulty difficulty, String memo) {
@@ -39,6 +45,9 @@ public class Chore extends BaseTimeEntity {
         this.difficulty = difficulty;
         this.score = difficulty.getDefaultScore(); // 난이도별 기본 점수 자동 매핑
         this.memo = memo;
+    }
+    public void assignMember(Member member) {
+        this.assignedMember = member;
     }
 
     public void updateDifficulty(Difficulty difficulty) {
