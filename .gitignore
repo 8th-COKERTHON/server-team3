@@ -8,9 +8,6 @@
 .gradle/
 build/
 gradle/
-!gradle/wrapper/gradle-wrapper.jar
-gradlew
-gradlew.bat
 
 # IntelliJ IDEA
 *.iml
