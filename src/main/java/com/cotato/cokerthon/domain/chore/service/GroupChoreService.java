@@ -5,11 +5,7 @@ import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreFromCatalogReques
 import com.cotato.cokerthon.domain.chore.dto.request.GroupChoreStatusUpdateRequest;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreBoardResponse;
 import com.cotato.cokerthon.domain.chore.dto.response.GroupChoreResponse;
-import com.cotato.cokerthon.domain.chore.entity.AssignType;
-import com.cotato.cokerthon.domain.chore.entity.Chore;
-import com.cotato.cokerthon.domain.chore.entity.ChoreStatus;
-import com.cotato.cokerthon.domain.chore.entity.GroupChore;
-import com.cotato.cokerthon.domain.chore.entity.RepeatCycle;
+import com.cotato.cokerthon.domain.chore.entity.*;
 import com.cotato.cokerthon.domain.chore.exception.ChoreErrorCode;
 import com.cotato.cokerthon.domain.chore.repository.ChoreRepository;
 import com.cotato.cokerthon.domain.chore.repository.GroupChoreRepository;
@@ -18,6 +14,7 @@ import com.cotato.cokerthon.domain.group.repository.GroupMemberRepository;
 import com.cotato.cokerthon.domain.group.repository.GroupRepository;
 import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.domain.member.repository.MemberRepository;
+import com.cotato.cokerthon.domain.roulette.service.RouletteService;
 import com.cotato.cokerthon.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,9 +39,10 @@ public class GroupChoreService {
     private final GroupRepository groupRepository;
     private final MemberRepository memberRepository;
     private final GroupMemberRepository groupMemberRepository;
+    private final RouletteService rouletteService;
 
     /**
-     * 완전히 새로운 집안일 추가 (집안일 항목을 새로 만들고, 이를 바탕으로 등록)
+     * 집안일 추가
      */
     @Transactional
     public GroupChoreResponse createChore(Long groupId, GroupChoreCreateRequest request) {
@@ -54,28 +52,25 @@ public class GroupChoreService {
         Member assignee = resolveAssignee(group, request.assignType(), request.assigneeId());
         validateRepeatPattern(request.repeatCycle(), request.repeatPattern());
 
-        // 1. 새로운 집안일 항목(카탈로그)을 생성
-        Chore chore = Chore.builder()
-                .group(group)
-                .name(request.name())
-                .difficulty(request.difficulty())
-                .build();
-        Chore savedChoreItem = choreRepository.save(chore);
-
-        // 2. 생성한 항목을 참조하는 집안일 등록
         GroupChore groupChore = GroupChore.builder()
                 .group(group)
                 .assignee(assignee)
-                .chore(savedChoreItem)
                 .name(request.name())
                 .date(request.date())
                 .assignType(request.assignType())
                 .repeatCycle(request.repeatCycle())
                 .repeatPattern(request.repeatPattern())
                 .memo(request.memo())
+                .difficulty(request.difficulty())
                 .build();
 
         GroupChore savedChore = groupChoreRepository.save(groupChore);
+
+        if (request.assignType() == AssignType.ROULETTE) {
+            Member winner = rouletteService.spinForChore(savedChore);
+            savedChore.assignTo(winner);
+        }
+
         return GroupChoreResponse.from(savedChore);
     }
 
@@ -115,6 +110,12 @@ public class GroupChoreService {
                 .build();
 
         GroupChore savedChore = groupChoreRepository.save(groupChore);
+
+        if (request.assignType() == AssignType.ROULETTE) {
+            Member winner = rouletteService.spinForChore(savedChore);
+            savedChore.assignTo(winner);
+        }
+
         return GroupChoreResponse.from(savedChore);
     }
 

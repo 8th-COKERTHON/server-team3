@@ -18,22 +18,22 @@ import io.swagger.v3.oas.annotations.servers.Server;
         ),
         servers = {
                 @Server(url = "http://localhost:8080", description = "Local Development"),
-                @Server(url = "https://43.202.209.89.nip.io", description = "Prod Development"),
+                @Server(url = "https://15.164.164.141.nip.io", description = "Prod Development"),
         }
 )
 @Configuration
 public class SwaggerConfig {
 
     /**
-     * Member 관련 API
+     * Roulette 관련 API
      */
     @Bean
-    public GroupedOpenApi userApi() {
+    public GroupedOpenApi rouletteApi() {
         return GroupedOpenApi.builder()
-                .group("Member")
-                .displayName("Member API")
-                .packagesToScan("com.cotato.cokerthon.domain.member.controller")
-                .pathsToMatch("/api/members/**")
+                .group("Roulette")
+                .displayName("roulette API")
+                .packagesToScan("com.cotato.cokerthon.domain.roulette.controller")
+                .pathsToMatch("/api/groups/{groupId}/roulette/**")
                 .build();
     }
 
@@ -76,4 +76,16 @@ public class SwaggerConfig {
                 .build();
     }
 
+    /**
+     * Member 관련 API
+     */
+    @Bean
+    public GroupedOpenApi memberApi() {
+        return GroupedOpenApi.builder()
+                .group("Member")
+                .displayName("Member API")
+                .packagesToScan("com.cotato.cokerthon.domain.member.controller")
+                .pathsToMatch("/api/members/**")
+                .build();
+    }
 }
