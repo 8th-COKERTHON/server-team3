@@ -4,6 +4,7 @@ import com.cotato.cokerthon.domain.auth.dto.request.LoginRequest;
 import com.cotato.cokerthon.domain.auth.dto.request.SignupRequest;
 import com.cotato.cokerthon.domain.auth.dto.response.AuthResponse;
 import com.cotato.cokerthon.domain.auth.exception.AuthErrorCode;
+import com.cotato.cokerthon.domain.group.repository.GroupMemberRepository;
 import com.cotato.cokerthon.domain.member.entity.Member;
 import com.cotato.cokerthon.domain.member.repository.MemberRepository;
 import com.cotato.cokerthon.global.exception.CustomException;
@@ -17,12 +18,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AuthService {
 
     private final MemberRepository memberRepository;
+    private final GroupMemberRepository groupMemberRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
@@ -48,7 +52,7 @@ public class AuthService {
                 .build();
 
         Member newMember = memberRepository.save(member);
-        return AuthResponse.from(newMember);
+        return AuthResponse.from(newMember, List.of()); // 가입 직후에는 소속된 그룹이 없음
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -68,7 +72,12 @@ public class AuthService {
 
             // 세션 확인
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            return AuthResponse.from(member);
+
+            List<Long> groupIds = groupMemberRepository.findByMember(member).stream()
+                    .map(groupMember -> groupMember.getGroup().getId())
+                    .toList();
+
+            return AuthResponse.from(member, groupIds);
         } catch (BadCredentialsException e) {
             throw new CustomException(AuthErrorCode.UNAUTHORIZED);
         }
