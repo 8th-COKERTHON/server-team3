@@ -18,7 +18,8 @@ public class CorsConfig implements WebMvcConfigurer {
             "http://localhost:3000",
             "http://localhost:5173",
             "http://localhost:5174",
-            "https://cokerthon-team3.vercel.app"
+            "https://cokerthon-team3.vercel.app",
+            "https://zipzuk-git-main-canofmatos-projects.vercel.app"
     );
 
     @Override
